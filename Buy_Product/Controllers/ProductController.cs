@@ -10,9 +10,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
+using Repository_Layer.Services.Entities;
 
 namespace ProductAPI_EFCore.Controllers
 {
+
     [Authorize]
     [Route("[controller]")]
     [ApiController]
@@ -29,58 +31,51 @@ namespace ProductAPI_EFCore.Controllers
             this.webHostEnvironment = webHostEnvironment;
         }
 
-        [HttpPost("AddProduct")]
-        public IActionResult AddProduct(ProductPostModel productModel)
-        {
-            try
-            {
-                var userId = User.Claims.FirstOrDefault(x => x.Type.ToString().Equals("UserId", StringComparison.InvariantCultureIgnoreCase));
-                int UserId = int.Parse(userId.Value);
+        //[HttpPost("AddProduct")]
+        //public IActionResult AddProduct(ProductPostModel productModel)
+        //{
+        //    try
+        //    {
+
+        //        var userId = User.Claims.FirstOrDefault(x => x.Type.ToString().Equals("UserId", StringComparison.InvariantCultureIgnoreCase));
+        //        int UserId = int.Parse(userId.Value);
+
+        //        this.productBL.AddProduct(productModel, UserId);
+        //        return this.Ok(new { success = true, message = "ProductCreated Successfully with Image" });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw ex;
 
 
-                this.productBL.AddProduct(productModel, UserId);
-
-                return this.Ok(new { success = true, message = "ProductCreated Successfully" });
-
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        [HttpPost("[action]")]
-        public IActionResult UploadedFiles(List<IFormFile> files)
-        {
-            if (files.Count == 0)
-                return BadRequest();
-            string directoryPath = Path.Combine(webHostEnvironment.ContentRootPath, "UploadedFiles");//we can get root path of solun from web host envir
-            foreach (var file in files)
-            {
-                string filePath = Path.Combine(directoryPath, file.FileName);
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    file.CopyTo(stream);
-                }
-            }
-            return Ok("Uploaded Successful");
-        }
-
+        //    }
+        //}
 
         //[HttpPost("AddProduct")]
         //public IActionResult AddProduct(ProductPostModel productModel)
         //{
-
         //    try
         //    {
-        //        string FileName = UploadedFiles(productModel);
         //        var userId = User.Claims.FirstOrDefault(x => x.Type.ToString().Equals("UserId", StringComparison.InvariantCultureIgnoreCase));
         //        int UserId = int.Parse(userId.Value);
 
+        //        //UploadFiles in Database
 
-        //        this.productBL.AddProduct(productModel, UserId);
+        //        string directoryPath = Path.Combine(webHostEnvironment.ContentRootPath, "UploadedFiles");//we can get root path of solun from web host envir
+        //        var originalFileName = " ";
 
-        //        return this.Ok(new { success = true, message = "ProductCreated Successfully" });
+
+        //        string filePath = Path.Combine(directoryPath, productModel.File.FileName);
+        //        originalFileName = Path.GetFileName(productModel.File.FileName);
+        //        using (var stream = new FileStream(filePath, FileMode.Create))
+        //        {
+        //           productModel.File.CopyTo(stream);
+        //        }
+
+
+        //        //this.productBL.AddProduct(productModel, UserId, files);
+
+        //        return this.Ok(new { success = true, message = "ProductCreated Successfully with Image", FileName = productModel.File.FileName });
 
         //    }
         //    catch (Exception ex)
@@ -89,23 +84,84 @@ namespace ProductAPI_EFCore.Controllers
         //    }
         //}
 
+        
 
-        //public string UploadedFiles(ProductPostModel productModel, List<IFormFile> files)
-        //{
-        //    string FileName = null;
-        //    if (productModel.Image != null)
-        //    {
-        //        string directoryPath = Path.Combine(webHostEnvironment.ContentRootPath, "UploadedFiles");//we can get root path of solun from web host envir
-        //        foreach (var Image in files)
-        //        {
-        //            string filePath = Path.Combine(directoryPath, Image.FileName);
-        //            using (var stream = new FileStream(filePath, FileMode.Create))
-        //            {
-        //                productModel.Image.CopyTo(stream);
-        //            }
-        //        }
-        //    }
-        //    return FileName;
-        //}
+        [HttpPost("AddProduct")]
+        public IActionResult AddProduct(string Name, int Price, IFormFile files)
+        {
+            try
+            {
+                var userId = User.Claims.FirstOrDefault(x => x.Type.ToString().Equals("UserId", StringComparison.InvariantCultureIgnoreCase));
+                int UserId = int.Parse(userId.Value);
+                ProductPostModel productModel = new ProductPostModel();
+                productModel.Name = Name;
+                productModel.Price = Price;
+                var Image = files.FileName;
+
+                this.productBL.AddProduct(productModel, UserId,Image);
+
+                //UploadFiles in Database
+
+                string directoryPath = Path.Combine(webHostEnvironment.ContentRootPath, "UploadedFiles");//we can get root path of solun from web host envir
+                var originalFileName = " ";
+
+
+                string filePath = Path.Combine(directoryPath, files.FileName);
+                originalFileName = Path.GetFileName(files.FileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    files.CopyTo(stream);
+                }
+
+
+                //this.productBL.AddProduct(productModel, UserId, files);
+
+                return this.Ok(new { success = true, message = "ProductCreated Successfully with Image", FileName = files.FileName });
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        [HttpPost("UploadImage/{ProductId}")]
+        public IActionResult UploadedFiles(IFormFile files, int ProductId)
+        {
+
+            var userId = User.Claims.FirstOrDefault(x => x.Type.ToString().Equals("UserId", StringComparison.InvariantCultureIgnoreCase));
+            int UserId = int.Parse(userId.Value);
+            string directoryPath = Path.Combine(webHostEnvironment.ContentRootPath, "UploadedFiles");//we can get root path of solun from web host envir
+            var originalFileName = " ";
+
+
+            string filePath = Path.Combine(directoryPath, files.FileName);
+            originalFileName = Path.GetFileName(files.FileName);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                files.CopyTo(stream);
+            }
+            //if (files.Count == 0)
+            //    return BadRequest();
+            //string directoryPath = Path.Combine(webHostEnvironment.ContentRootPath, "UploadedFiles");//we can get root path of solun from web host envir
+            //var originalFileName=" ";
+            //foreach (var file in files)
+            //{
+            //    string filePath = Path.Combine(directoryPath, file.FileName);
+            //     originalFileName = Path.GetFileName(file.FileName);
+            //    using (var stream = new FileStream(filePath, FileMode.Create))
+            //    {
+            //        file.CopyTo(stream);
+            //    }
+            //}
+            //Product obj = new Product();
+            var obj = productContext.Products.Where(x => x.ProductId == ProductId && x.UserId == UserId).FirstOrDefault();
+
+            obj.Image = originalFileName;
+            productContext.Products.Update(obj);
+            productContext.SaveChanges();
+            return Ok(new { success = true, message = "FileUpload Successfully", FileName = originalFileName });
+        }
+
     }
 }

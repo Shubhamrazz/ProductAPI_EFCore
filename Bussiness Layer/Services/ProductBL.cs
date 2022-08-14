@@ -1,5 +1,6 @@
 ﻿using Bussiness_Layer.Interface;
 using Database_Layer.ProductModel;
+using Microsoft.AspNetCore.Http;
 using Repository_Layer.Interface;
 using System;
 using System.Collections.Generic;
@@ -16,17 +17,28 @@ namespace Bussiness_Layer.Services
             this.productRL = productRL;
         }
 
-        public void AddProduct(ProductPostModel productPostModel,int UserId)
+        public void AddProduct(ProductPostModel productPostModel, int UserId, string Image)
         {
             try
             {
-                this.productRL.AddProduct(productPostModel, UserId);
+                this.productRL.AddProduct(productPostModel, UserId,Image);
             }
             catch (Exception ex)
             {
                 throw ex;
             }
         }
+        //public void AddProduct(ProductPostModel productPostModel, int UserId, IFormFile files)
+        //{
+        //    try
+        //    {
+        //        this.productRL.AddProduct(productPostModel, UserId, files);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw ex;
+        //    }
+        //}
     }
 }
 

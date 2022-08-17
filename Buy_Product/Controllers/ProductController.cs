@@ -11,8 +11,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Repository_Layer.Services.Entities;
+using Newtonsoft.Json;
 
-namespace ProductAPI_EFCore.Controllers
+namespace Buy_Product.Controllers
 {
 
     [Authorize]
@@ -29,6 +30,47 @@ namespace ProductAPI_EFCore.Controllers
             this.productContext = productContext;
             this.productBL = productBL;
             this.webHostEnvironment = webHostEnvironment;
+        }
+
+
+        [HttpPost("AddProduct")]
+        public IActionResult AddProduct(string Name, int Price, IFormFile files)
+        {
+            try
+            {
+                var userId = User.Claims.FirstOrDefault(x => x.Type.ToString().Equals("UserId", StringComparison.InvariantCultureIgnoreCase));
+                int UserId = int.Parse(userId.Value);
+                string Serialization;
+                ProductPostModel productModel = new ProductPostModel();
+                productModel.Name = Name;
+                productModel.Price = Price;
+                var Image = files.FileName;
+                Serialization= JsonConvert.SerializeObject(productModel.Name,(Formatting)productModel.Price);
+                this.productBL.AddProduct(productModel, UserId, Image);
+
+                //UploadFiles in Database
+
+                string directoryPath = Path.Combine(webHostEnvironment.ContentRootPath, "UploadedFiles");//we can get root path of solun from web host envir
+                var originalFileName = " ";
+
+
+                string filePath = Path.Combine(directoryPath, files.FileName);
+                originalFileName = Path.GetFileName(files.FileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    files.CopyTo(stream);
+                }
+
+
+                //this.productBL.AddProduct(productModel, UserId, files);
+
+                return this.Ok(new { success = true, message = "ProductCreated Successfully with Image", FileName = files.FileName ,Serialization});
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
 
         //[HttpPost("AddProduct")]
@@ -50,6 +92,7 @@ namespace ProductAPI_EFCore.Controllers
 
         //    }
         //}
+
 
         //[HttpPost("AddProduct")]
         //public IActionResult AddProduct(ProductPostModel productModel)
@@ -84,84 +127,43 @@ namespace ProductAPI_EFCore.Controllers
         //    }
         //}
 
-        
+        //[HttpPost("UploadImage/{ProductId}")]
+        //public IActionResult UploadedFiles(IFormFile files, int ProductId)
+        //{
 
-        [HttpPost("AddProduct")]
-        public IActionResult AddProduct(string Name, int Price, IFormFile files)
-        {
-            try
-            {
-                var userId = User.Claims.FirstOrDefault(x => x.Type.ToString().Equals("UserId", StringComparison.InvariantCultureIgnoreCase));
-                int UserId = int.Parse(userId.Value);
-                ProductPostModel productModel = new ProductPostModel();
-                productModel.Name = Name;
-                productModel.Price = Price;
-                var Image = files.FileName;
-
-                this.productBL.AddProduct(productModel, UserId,Image);
-
-                //UploadFiles in Database
-
-                string directoryPath = Path.Combine(webHostEnvironment.ContentRootPath, "UploadedFiles");//we can get root path of solun from web host envir
-                var originalFileName = " ";
+        //    var userId = User.Claims.FirstOrDefault(x => x.Type.ToString().Equals("UserId", StringComparison.InvariantCultureIgnoreCase));
+        //    int UserId = int.Parse(userId.Value);
+        //    string directoryPath = Path.Combine(webHostEnvironment.ContentRootPath, "UploadedFiles");//we can get root path of solun from web host envir
+        //    var originalFileName = " ";
 
 
-                string filePath = Path.Combine(directoryPath, files.FileName);
-                originalFileName = Path.GetFileName(files.FileName);
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    files.CopyTo(stream);
-                }
+        //    string filePath = Path.Combine(directoryPath, files.FileName);
+        //    originalFileName = Path.GetFileName(files.FileName);
+        //    using (var stream = new FileStream(filePath, FileMode.Create))
+        //    {
+        //        files.CopyTo(stream);
+        //    }
+        //    //if (files.Count == 0)
+        //    //    return BadRequest();
+        //    //string directoryPath = Path.Combine(webHostEnvironment.ContentRootPath, "UploadedFiles");//we can get root path of solun from web host envir
+        //    //var originalFileName=" ";
+        //    //foreach (var file in files)
+        //    //{
+        //    //    string filePath = Path.Combine(directoryPath, file.FileName);
+        //    //     originalFileName = Path.GetFileName(file.FileName);
+        //    //    using (var stream = new FileStream(filePath, FileMode.Create))
+        //    //    {
+        //    //        file.CopyTo(stream);
+        //    //    }
+        //    //}
+        //    //Product obj = new Product();
+        //    var obj = productContext.Products.Where(x => x.ProductId == ProductId && x.UserId == UserId).FirstOrDefault();
 
-
-                //this.productBL.AddProduct(productModel, UserId, files);
-
-                return this.Ok(new { success = true, message = "ProductCreated Successfully with Image", FileName = files.FileName });
-
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        [HttpPost("UploadImage/{ProductId}")]
-        public IActionResult UploadedFiles(IFormFile files, int ProductId)
-        {
-
-            var userId = User.Claims.FirstOrDefault(x => x.Type.ToString().Equals("UserId", StringComparison.InvariantCultureIgnoreCase));
-            int UserId = int.Parse(userId.Value);
-            string directoryPath = Path.Combine(webHostEnvironment.ContentRootPath, "UploadedFiles");//we can get root path of solun from web host envir
-            var originalFileName = " ";
-
-
-            string filePath = Path.Combine(directoryPath, files.FileName);
-            originalFileName = Path.GetFileName(files.FileName);
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                files.CopyTo(stream);
-            }
-            //if (files.Count == 0)
-            //    return BadRequest();
-            //string directoryPath = Path.Combine(webHostEnvironment.ContentRootPath, "UploadedFiles");//we can get root path of solun from web host envir
-            //var originalFileName=" ";
-            //foreach (var file in files)
-            //{
-            //    string filePath = Path.Combine(directoryPath, file.FileName);
-            //     originalFileName = Path.GetFileName(file.FileName);
-            //    using (var stream = new FileStream(filePath, FileMode.Create))
-            //    {
-            //        file.CopyTo(stream);
-            //    }
-            //}
-            //Product obj = new Product();
-            var obj = productContext.Products.Where(x => x.ProductId == ProductId && x.UserId == UserId).FirstOrDefault();
-
-            obj.Image = originalFileName;
-            productContext.Products.Update(obj);
-            productContext.SaveChanges();
-            return Ok(new { success = true, message = "FileUpload Successfully", FileName = originalFileName });
-        }
+        //    obj.Image = originalFileName;
+        //    productContext.Products.Update(obj);
+        //    productContext.SaveChanges();
+        //    return Ok(new { success = true, message = "FileUpload Successfully", FileName = originalFileName });
+        //}
 
     }
 }

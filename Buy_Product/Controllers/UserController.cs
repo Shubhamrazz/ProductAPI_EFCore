@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ProductAPI_EFCore.Controllers
+namespace Buy_Product.Controllers
 {
     [Route("[controller]")]
     [ApiController]
@@ -31,7 +31,7 @@ namespace ProductAPI_EFCore.Controllers
                 this.userBL.Register(userModel);
                 return this.Ok(new { success = true, message = "UserCreated Successfully" });
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw ex;
             }
@@ -42,7 +42,7 @@ namespace ProductAPI_EFCore.Controllers
         {
             try
             {
-   
+
                 string token = this.userBL.Login(userLoginModel);
                 if (token == null)
                 {
